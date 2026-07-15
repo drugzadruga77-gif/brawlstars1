@@ -73,6 +73,83 @@
         .bar-segment.win { background: linear-gradient(90deg, #2ecc71, #27ae60); }
         .bar-segment.draw { background: linear-gradient(90deg, #f1c40f, #f39c12); }
         .bar-segment.loss { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div id="screenSearch" class="screen">
+        <div class="header"><div class="logo-icon">🏆</div><h1>BRAWL STATS</h1></div>
+        <div class="search-container">
+            <input type="text" id="playerTag" placeholder="# 2V0ULOGQV8">
+            <button id="searchBtn" class="search-box-btn" onclick="getBrawlStats()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+        </div>
+        <div id="recentSearchBox" class="recent-search hidden" onclick="searchRecent()">⏱️ Последний поиск: <span id="recentTag">#2V0ULOGQV8</span></div>
+    </div>
+    <div id="screenLoading" class="screen hidden flex-center">
+        <div class="spinner"></div>
+        <div class="loading-text">ЗАГРУЗКА ПРОФИЛЯ</div>
+    </div>
+    <div id="screenResults" class="screen hidden">
+        <div class="top-nav-row"><button class="btn-back" onclick="showScreen('screenSearch')">❮ Назад</button><button class="btn-refresh" onclick="reloadCurrentProfile()">🔄 Обновить</button></div>
+        <div class="player-main-card glass-card">
+            <div class="avatar-container"><img id="playerAvatar" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt=""></div>
+            <h2 id="playerName">---</h2>
+            <div id="playerTagSub" class="player-tag-sub">#---</div>
+            <div class="player-badges">
+                <div class="badge club-badge">👤 <span id="clubName">---</span></div>
+                <div class="badge level-badge">⭐ Уровень <span id="playerLevel">0</span></div>
+            </div>
+            <div class="trophy-big-box">
+                <div class="t-big-val" id="resTrophies">0</div>
+                <div class="t-big-record">РЕКОРД: <span id="resMaxTrophies">0</span></div>
+            </div>
+        </div>
+        <div class="tabs-container">
+            <button id="btnTabProfil" class="tab-item active" onclick="switchTab('tabProfil')">Профиль</button>
+            <button id="btnTabBrawlers" class="tab-item" onclick="switchTab('tabBrawlers')">Бойцы (<span id="brawlersTabCount">0</span>)</button>
+            <button id="btnTabBattles" class="tab-item" onclick="switchTab('tabBattles')">Бои</button>
+        </div>
+        <div id="tabProfil" class="tab-content">
+            <div class="section-title">💛 Победы</div>
+            <div class="stats-list-card glass-card">
+                <div class="list-row"><span>3 на 3</span> <strong id="stat3v3">0</strong></div>
+                <div class="list-row"><span>Solo</span> <strong id="statSolo">0</strong></div>
+                <div class="list-row"><span>Duo</span> <strong id="statDuo">0</strong></div>
+            </div>
+            <div class="section-title">⚡ Коллекция</div>
+            <div class="collection-grid">
+                <div class="coll-box glass-card"><span>Гаджеты</span><div class="coll-val"><strong id="gadgetsCount">0/210</strong></div></div>
+                <div class="coll-box glass-card"><span>Звёздные силы</span><div class="coll-val"><strong id="starPowersCount">0/210</strong></div></div>
+                <div class="coll-box glass-card"><span>Снаряжение</span><div class="coll-val"><strong id="gearsCount">0</strong></div></div>
+                <div class="coll-box glass-card"><span>Гиперзаряды</span><div class="coll-val"><strong id="hypersCount">0</strong></div></div>
+            </div>
+            <div class="section-title">🕒 За сегодня</div>
+            <div class="today-stats-card glass-card">
+                <div class="info-sub-row">ℹ️ Оценка по последним 50 боям</div>
+                <div class="today-main-row">
+                    <div class="today-mini-box"><span>СЫГРАНО</span><strong id="todayPlayed">0</strong></div>
+                    <div class="today-mini-box"><span>ТРОФЕИ</span><strong id="todayTrophies" class="positive">+0</strong></div>
+                </div>
+                <div class="results-bar-title">РЕЗУЛЬТАТЫ</div>
+                <div class="winrate-bar-container">
+                    <div id="barWin" class="bar-segment win" style="width:0%"></div>
+                    <div id="barDraw" class="bar-segment draw" style="width:0%"></div>
+                    <div id="barLoss" class="bar-segment loss" style="width:0%"></div>
+                </div>
+                <div class="winrate-labels"><span class="lbl-win"><span id="txtWin">0</span> В</span><span class="lbl-draw"><span id="txtDraw">0</span> Н</span><span class="lbl-loss"><span id="txtLoss">0</span> П</span></div>
+                <div class="time-in-game">Примерное время в игре: <strong id="timePlayed">0ч 0м</strong></div>
+            </div>
+        </div>
+        <div id="tabBrawlers" class="tab-content hidden">
+            <input type="text" id="brawlerSearchInput" placeholder="🔍 Поиск бойца...">
+            <div class="brawlers-real-grid" id="brawlersContainer"></div>
+        </div>
+        <div id="tabBattles" class="tab-content hidden">
+            <div id="battleLogContainer" class="battle-log-list"></div>
+        </div>
     </div>
 </div>
 
@@ -170,76 +247,7 @@ async function getBrawlStats(e) {
         document.getElementById("clubName").innerText = o.club && o.club.name ? o.club.name : "Нет клуба";
         document.getElementById("playerLevel").innerText = o.expLevel;
         document.getElementById("resTrophies").innerText = o.trophies.toLocaleString();
-        document.getElementById("resMaxTrophies").innerText = o.highestTrophies.toLocaleString();
-        document.getElementById("playerAvatar").src = `https://brawlify.com{o.icon && o.icon.id ? o.icon.id : 28000000}.png`;
-        document.getElementById("stat3v3").innerText = (o["3v3Victories"] || 0).toLocaleString();
-        document.getElementById("statSolo").innerText = (o.soloVictories || 0).toLocaleString();
-        document.getElementById("statDuo").innerText = (o.duoVictories || 0).toLocaleString();
-        let d = 0, s = 0, c = 0, i = 0;
-        o.brawlers.forEach(e => {
-            if (e.gadgets) d += e.gadgets.length;
-            if (e.starPowers) s += e.starPowers.length;
-            if (e.gears) c += e.gears.length;
-            if (e.gears && e.gears.length > 1) i += 1;
-        });
-        document.getElementById("gadgetsCount").innerText = `${d}/210`;
-        document.getElementById("starPowersCount").innerText = `${s}/210`;
-        document.getElementById("gearsCount").innerText = c;
-        document.getElementById("hypersCount").innerText = i;
-        let p = 0, g = 0, m = 0, u = 0, h = 0, E = 0;
-        const f = document.getElementById("battleLogContainer");
-        if (f.innerHTML = "", l.contents) {
-            const b = JSON.parse(l.contents);
-            if (b.items && b.items.length > 0) {
-                p = b.items.slice(0, 50).length;
-                const I = document.createDocumentFragment();
-                b.items.slice(0, 50).forEach(e => {
-                    const t = e.battle;
-                    if (!t) return;
-                    if (t.trophyChange) g += t.trophyChange;
-                    let modeTime = 2.5;
-                    if (e.event && e.event.mode) {
-                        let mode = e.event.mode.toLowerCase();
-                        if (mode.includes("heist") || mode.includes("bounty")) modeTime = 1.8;
-                        else if (mode.includes("survival") || mode.includes("solo") || mode.includes("duo")) modeTime = 2.1;
-                        else if (mode.includes("ball")) modeTime = 2.3;
-                        else if (t.duration) modeTime = t.duration / 60;
-                    }
-                    E += modeTime;
-                    let r = false, a = false;
-                    if ("victory" === t.result) { m++; r = true; }
-                    else if ("draw" === t.result) { u++; a = true; }
-                    else if ("defeat" === t.result) h++;
-                    else if (t.rank) { if (t.rank <= 4) { m++; r = true; } else h++; }
-                    const n = document.createElement("div");
-                    n.className = "battle-card glass-card";
-                    const l = r ? "ПОБЕДА" : (a ? "НИЧЬЯ" : "ПОРАЖЕНИЕ"), o = r ? "positive" : (a ? "draw" : "negative"), d = t.trophyChange ? (t.trophyChange >= 0 ? `+${t.trophyChange}` : t.trophyChange) : "0";
-                    let s = "";
-                    (t.teams ? t.teams.flat() : t.players || []).slice(0, 6).forEach(e => {
-                        const t = e.brawler ? e.brawler.name : "Боец", r = e.brawler ? e.brawler.id : 16000000, a = e.brawler ? e.brawler.trophies : 0, n = e.tag ? e.tag.replace("#", "") : "";
-                        s += `<div class="b-player-row" onclick="getBrawlStats('${n}')"><div class="bp-left"><img class="bp-avatar" src="https://brawlify.com{r}.png" onerror="this.src='https://brawlify.com'"><div class="bp-info"><span class="bp-name">${e.name || 'Игрок'}</span><span class="bp-brawler">${t}</span></div></div><div class="bp-tr-box">🏆 ${a}</div></div>`;
-                    });
-                    n.innerHTML = `<div class="battle-card-header"><div><div class="battle-result-status ${o}">${l}</div><div class="battle-meta-txt">${e.event.mode || 'Бой'} • ${e.event.map || 'Карта'}</div></div><div class="battle-change-tr ${t.trophyChange && t.trophyChange >= 0 ? 'positive' : 'negative'}">${d} 🏆</div></div><div class="battle-players-list">${s}</div>`;
-                    I.appendChild(n);
-                });
-                f.appendChild(I);
-            }
-        }
-        if (0 === p) { p = 50; g = 120; m = 42; u = 0; h = 8; E = 114; }
-        document.getElementById("todayPlayed").innerText = p;
-        const b = document.getElementById("todayTrophies");
-        b.innerText = g >= 0 ? `+${g}` : g;
-        b.className = g >= 0 ? "box-val positive" : "box-val negative";
-        document.getElementById("barWin").style.width = `${m / p * 100}%`;
-        document.getElementById("barDraw").style.width = `${u / p * 100}%`;
-        document.getElementById("barLoss").style.width = `${h / p * 100}%`;
-        document.getElementById("txtWin").innerText = m;
-        document.getElementById("txtDraw").innerText = u;
-        document.getElementById("txtLoss").innerText = h;
-        const I = Math.floor(E / 60), y = document.getElementById("timePlayed");
-        y.innerText = `${I}ч ${Math.floor(E % 60)}м`;
-        allBrawlersData = o.brawlers;
-        document.getElementById("brawlersTabCount").innerText = o.brawlers.length;
-        filterBrawlers();
-        if (!e) {
-            localStorage.setItem("lastBrawlTag", `#${t}`);
+        let d=0,s=0,c=0,i=0;o.brawlers.forEach(e=>{if(e.gadgets)d+=e.gadgets.length;if(e.starPowers)s+=e.starPowers.length;if(e.gears)c+=e.gears.length;if(e.gears&&e.gears.length>1)i+=1});document.getElementById("gadgetsCount").innerText=`${d}/210`;document.getElementById("starPowersCount").innerText=`${s}/210`;document.getElementById("gearsCount").innerText=c;document.getElementById("hypersCount").innerText=i;let p=0,g=0,m=0,u=0,h=0,E=0;const f=document.getElementById("battleLogContainer");if(f.innerHTML="",l.contents){const b=JSON.parse(l.contents);if(b.items&&b.items.length>0){p=b.items.slice(0,50).length;const I=document.createDocumentFragment();b.items.slice(0,50).forEach(e=>{const t=e.battle;if(!t)return;if(t.trophyChange)g+=t.trophyChange;let modeTime=2.5;if(e.event&&e.event.mode){let mode=e.event.mode.toLowerCase();if(mode.includes("heist")||mode.includes("bounty"))modeTime=1.8;else if(mode.includes("survival")||mode.includes("solo")||mode.includes("duo"))modeTime=2.1;else if(mode.includes("ball"))modeTime=2.3;else if(t.duration)modeTime=t.duration/60}E+=modeTime;let r=false,a=false;if("victory"===t.result){m++;r=true}else if("draw"===t.result){u++;a=true}else if("defeat"===t.result)h++;else if(t.rank){if(t.rank<=4){m++;r=true}else h++}const n=document.createElement("div");n.className="battle-card glass-card";const l=r?"ПОБЕДА":(a?"НИЧЬЯ":"ПОРАЖЕНИЕ"),o=r?"positive":(a?"draw":"negative"),d=t.trophyChange?(t.trophyChange>=0?`+${t.trophyChange}`:t.trophyChange):"0";let s="";(t.teams?t.teams.flat():t.players||[]).slice(0,6).forEach(e=>{const t=e.brawler?e.brawler.name:"Боец",r=e.brawler?e.brawler.id:16000000,a=e.brawler?e.brawler.trophies:0,n=e.tag?e.tag.replace("#",""):"";s+=`<div class="b-player-row" onclick="getBrawlStats('${n}')"><div class="bp-left"><img class="bp-avatar" src="https://brawlify.com{r}.png" onerror="this.src='https://brawlify.com'"><div class="bp-info"><span class="bp-name">${e.name||'Игрок'}</span><span class="bp-brawler">${t}</span></div></div><div class="bp-tr-box">🏆 ${a}</div></div>`});n.innerHTML=`<div class="battle-card-header"><div><div class="battle-result-status ${o}">${l}</div><div class="battle-meta-txt">${e.event.mode||'Бой'} • ${e.event.map||'Карта'}</div></div><div class="battle-change-tr ${t.trophyChange&&t.trophyChange>=0?'positive':'negative'}">${d} 🏆</div></div><div class="battle-players-list">${s}</div>`;I.appendChild(n)});f.appendChild(I)}}if(0===p){p=50;g=120;m=42;u=0;h=8;E=114}document.getElementById("todayPlayed").innerText=p;const b=document.getElementById("todayTrophies");b.innerText=g>=0?`+${g}`:g;b.className=g>=0?"box-val positive":"box-val negative";document.getElementById("barWin").style.width=`${m/p*100}%`;document.getElementById("barDraw").style.width=`${u/p*100}%`;document.getElementById("barLoss").style.width=`${h/p*100}%`;document.getElementById("txtWin").innerText=m;document.getElementById("txtDraw").innerText=u;document.getElementById("txtLoss").innerText=h;const I=Math.floor(E/60),y=document.getElementById("timePlayed");y.innerText=`${I}ч ${Math.floor(E%60)}м`;allBrawlersData=o.brawlers;document.getElementById("brawlersTabCount").innerText=o.brawlers.length;filterBrawlers();if(!e){localStorage.setItem("lastBrawlTag",`#${t}`);document.getElementById("recentTag").innerText=`#${t}`;document.getElementById("recentSearchBox").classList.remove("hidden")}showScreen("screenResults");switchTab("tabProfil")}catch(v){alert("Игрок не найден, скрыл профиль или ошибка сети!");showScreen("screenSearch")}finally{isRequesting = false}}}
+</script>
+</body>
+</html>
